@@ -1,13 +1,66 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
+// backend/prisma/schema.prisma
 
 generator client {
-  provider = "prisma-client"
-  output   = "../generated/prisma"
+  provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "postgresql"
+}
+
+model User {
+  id             String     @id @default(cuid())
+  email          String     @unique
+  passwordHash   String
+  level          Int        @default(1)
+  currentXp      Int        @default(0)
+  // Tracks the last date the user was active.
+  // The daily-reset logic compares this against today's date (UTC).
+  lastActiveDate DateTime   @default(now()) @db.Date
+
+  habits         Habit[]
+  habitLogs      HabitLog[]
+
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+
+  @@map("users")
+}
+
+model Habit {
+  id               String     @id @default(cuid())
+  userId           String
+  name             String
+  description      String?
+  // XP reward is configurable per habit (e.g., hard habits = more XP)
+  xpReward         Int        @default(50)
+  // Soft boolean reset daily. NOT the source of truth for history.
+  // Source of truth = HabitLog table.
+  isCompletedToday Boolean    @default(false)
+
+  user             User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  logs             HabitLog[]
+
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+
+  @@index([userId])
+  @@map("habits")
+}
+
+model HabitLog {
+  id           String   @id @default(cuid())
+  habitId      String
+  userId       String
+  // Snapshot of XP at time of completion. Protects historical
+  // accuracy if xpReward is later edited by the user.
+  xpAwarded    Int
+  completedAt  DateTime @default(now())
+
+  habit        Habit    @relation(fields: [habitId], references: [id], onDelete: Cascade)
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, completedAt])
+  @@index([habitId])
+  @@map("habit_logs")
 }
