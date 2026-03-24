@@ -5,6 +5,7 @@ import cookieParser from 'cookie-parser';
 import { env } from './config/env';
 import { errorHandler } from './middleware/errorHandler';
 import { apiLimiter } from './middleware/rateLimiter';
+import { authRouter } from './modules/auth/auth.routes';
 
 // Module routers — imported here, registered below
 // (Filled in during the next phases as modules are built)
@@ -58,7 +59,7 @@ export function createApp(): Application {
   });
 
   //API routes 
-  // app.use('/api/auth', authRouter);
+  app.use('/api/auth', authRouter);
   // app.use('/api/habits', habitsRouter);
   // app.use('/api/progress', progressRouter);
 
