@@ -3,7 +3,6 @@ import { ZodError } from 'zod';
 import { JsonWebTokenError, TokenExpiredError } from 'jsonwebtoken';
 import type { ApiError } from '../types/api.types';
 
-// A typed application error that services/controllers can throw deliberately
 export class AppError extends Error {
   public readonly statusCode: number;
   public readonly code: string;
@@ -22,7 +21,6 @@ export class AppError extends Error {
   }
 }
 
-// Named constructors for common cases — keeps controller code clean
 export const NotFoundError = (resource: string): AppError =>
   new AppError(`${resource} not found`, 404, 'NOT_FOUND');
 
@@ -38,16 +36,14 @@ export const ConflictError = (message: string): AppError =>
 export const BadRequestError = (message: string): AppError =>
   new AppError(message, 400, 'BAD_REQUEST');
 
-// ─── Global handler ───────────────────────────────────────────────────────────
+//Global handler
 
 export function errorHandler(
   err: unknown,
   req: Request,
   res: Response,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   _next: NextFunction
 ): void {
-  // 1. Operational errors thrown deliberately by the app
   if (err instanceof AppError) {
     const body: ApiError = {
       success: false,
@@ -57,7 +53,6 @@ export function errorHandler(
     return;
   }
 
-  // 2. Zod validation errors (from the `validate` middleware)
   if (err instanceof ZodError) {
     const fields: Record<string, string[]> = {};
     for (const issue of err.issues) {
@@ -77,7 +72,6 @@ export function errorHandler(
     return;
   }
 
-  // 3. JWT errors — do not leak token details
   if (err instanceof TokenExpiredError) {
     const body: ApiError = {
       success: false,
@@ -96,7 +90,6 @@ export function errorHandler(
     return;
   }
 
-  // 4. Prisma known request errors — map to safe messages
   if (
     typeof err === 'object' &&
     err !== null &&
@@ -122,7 +115,6 @@ export function errorHandler(
     }
   }
 
-  // 5. Truly unexpected errors — log server-side, return generic message
   console.error('[Unhandled Error]', err);
   const body: ApiError = {
     success: false,

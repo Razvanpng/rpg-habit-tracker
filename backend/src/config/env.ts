@@ -1,6 +1,7 @@
 import 'dotenv/config';
 import { z } from 'zod';
 
+// validam env-urile la startup sa nu pice serverul random mai tarziu
 const envSchema = z.object({
   NODE_ENV: z
     .enum(['development', 'production', 'test'])

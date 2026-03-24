@@ -4,21 +4,18 @@ import { env } from '../config/env';
 import { UnauthorizedError } from './errorHandler';
 
 export interface JwtPayload {
-  sub: string;   // user.id
+  sub: string;
   email: string;
   iat: number;
   exp: number;
 }
 
-export function authenticate(
-  req: Request,
-  _res: Response,
-  next: NextFunction
-): void {
-  const token: string | undefined = req.cookies?.token as string | undefined;
+export function authenticate(req: Request, _res: Response, next: NextFunction): void {
+  // citim direct din cookie
+  const token = req.cookies?.token as string | undefined;
 
   if (!token) {
-    next(UnauthorizedError('No session token provided'));
+    next(UnauthorizedError('Nu esti logat'));
     return;
   }
 
@@ -27,7 +24,6 @@ export function authenticate(
     req.user = payload;
     next();
   } catch (err) {
-    // Pass JWT errors to the global error handler for safe mapping
-    next(err);
+    next(err); // errorHandler-ul global se ocupa de TokenExpired etc.
   }
 }
