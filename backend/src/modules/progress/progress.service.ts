@@ -1,6 +1,8 @@
 import { prisma } from '../../config/database';
 import type { ProgressSnapshot, SafeUser } from '../../types/api.types';
 
+// Formula XP: N * 100 * 1.5^(N-1)
+// TODO: Frontend-ul trebuie sa tina formula asta in sync 
 export function xpRequiredForLevel(level: number): number {
   return Math.floor(level * 100 * Math.pow(1.5, level - 1));
 }

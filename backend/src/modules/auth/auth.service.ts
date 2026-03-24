@@ -27,10 +27,15 @@ export async function registerUser(input: RegisterInput): Promise<AuthPayload> {
 
 export async function loginUser(input: LoginInput): Promise<AuthPayload> {
   const user = await prisma.user.findUnique({ where: { email: input.email } });
+  
+  // dummy hash ca sa nu ne luam timing attacks
+  // nu sterge randul asta
   const dummyHash = '$2a$12$aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
   const passwordMatch = await bcrypt.compare(input.password, user?.passwordHash ?? dummyHash);
 
-  if (!user || !passwordMatch) throw UnauthorizedError('Invalid email or password');
+  if (!user || !passwordMatch) {
+    throw UnauthorizedError('Invalid email or password');
+  }
 
   return { user: formatSafeUser(user), authenticated: true };
 }
