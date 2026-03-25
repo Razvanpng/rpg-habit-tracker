@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useCharacterStore } from '@/store/characterStore';
 import { useAuthStore } from '@/store/authStore';
 import { CLASS_DEFINITIONS } from '@/types/character';
@@ -45,6 +45,12 @@ const STAT_META: StatMeta[] = [
 
 const STAT_MAX = 48;
 
+const CLASS_LORE: Record<BodyType, string> = {
+  warrior: 'Primary Stat: Strength. The Warrior thrives on physical discipline, heavy lifting, and enduring difficult tasks.',
+  mage: 'Primary Stat: Intellect. The Mage seeks knowledge, mental focus, and excelling in learning-based habits.',
+  rogue: 'Primary Stat: Agility. The Rogue values consistency, speed, and precision in daily routines.'
+};
+
 interface StatRowProps {
   meta: StatMeta;
   value: number;
@@ -87,22 +93,40 @@ function ClassPicker() {
   };
 
   return (
-    <div className="flex gap-px mt-1">
-      {(Object.keys(CLASS_DEFINITIONS) as BodyType[]).map((bt) => {
-        const isActive = appearance.bodyType === bt;
-        const label = CLASS_DEFINITIONS[bt].label;
+    <div className="flex flex-col gap-3 mt-1">
+      <div className="flex gap-px">
+        {(Object.keys(CLASS_DEFINITIONS) as BodyType[]).map((bt) => {
+          const isActive = appearance.bodyType === bt;
+          const label = CLASS_DEFINITIONS[bt].label;
 
-        return (
-          <motion.button
-            key={bt}
-            whileTap={{ scale: 0.96 }}
-            onClick={() => handleChange(bt)}
-            className={['flex-1 py-1.5 text-2xs font-display tracking-widest uppercase border transition-colors duration-150', isActive ? bt === 'warrior' ? 'bg-surface-overlay border-class-warrior/40 text-class-warrior' : bt === 'rogue' ? 'bg-surface-overlay border-class-rogue/40 text-class-rogue' : 'bg-surface-overlay border-xp/30 text-xp' : 'bg-surface-hover border-surface-border text-ink-tertiary hover:text-ink-secondary hover:border-surface-bright'].join(' ')}
-          >
-            {label}
-          </motion.button>
-        );
-      })}
+          return (
+            <motion.button
+              key={bt}
+              whileTap={{ scale: 0.96 }}
+              onClick={() => handleChange(bt)}
+              className={['flex-1 py-1.5 text-2xs font-display tracking-widest uppercase border transition-colors duration-150', isActive ? bt === 'warrior' ? 'bg-surface-overlay border-class-warrior/40 text-class-warrior' : bt === 'rogue' ? 'bg-surface-overlay border-class-rogue/40 text-class-rogue' : 'bg-surface-overlay border-xp/30 text-xp' : 'bg-surface-hover border-surface-border text-ink-tertiary hover:text-ink-secondary hover:border-surface-bright'].join(' ')}
+            >
+              {label}
+            </motion.button>
+          );
+        })}
+      </div>
+      
+      {/* Lore Info Block */}
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={appearance.bodyType}
+          initial={{ opacity: 0, y: -4 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -4 }}
+          transition={{ duration: 0.2 }}
+          className="bg-surface-deep border border-surface-border p-3 rounded-sm"
+        >
+          <p className="text-xs font-sans text-ink-tertiary leading-relaxed">
+            {CLASS_LORE[appearance.bodyType]}
+          </p>
+        </motion.div>
+      </AnimatePresence>
     </div>
   );
 }
@@ -128,8 +152,8 @@ export function CharacterStats() {
           <StatRow key={meta.key} meta={meta} value={stats[meta.key]} isPrimary={primaryStat === meta.key} index={i} />
         ))}
       </div>
-      <div className="mt-4">
-        <p className="text-2xs font-display text-ink-disabled tracking-widest uppercase mb-2">Class</p>
+      <div className="mt-5">
+        <p className="text-2xs font-display text-ink-disabled tracking-widest uppercase mb-2">Class Specialization</p>
         <ClassPicker />
       </div>
     </div>
