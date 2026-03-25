@@ -1,18 +1,22 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import type { User, AuthPayload, LoginFormValues, RegisterFormValues } from '@/types';
-import { get as apiGet, post as apiPost } from '@/lib/api';
+import type { User } from '@/types';
+import { get, post } from '@/lib/api';
+import type { AuthPayload, LoginFormValues, RegisterFormValues } from '@/types';
 
 interface AuthState {
   user: User | null;
   isLoading: boolean;
+  isHydrated: boolean;
   error: string | null;
+
   register: (values: RegisterFormValues) => Promise<void>;
   login: (values: LoginFormValues) => Promise<void>;
   logout: () => Promise<void>;
   fetchMe: () => Promise<void>;
   updateUser: (user: User) => void;
   clearError: () => void;
+  _setHydrated: () => void;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -20,15 +24,19 @@ export const useAuthStore = create<AuthState>()(
     (set) => ({
       user: null,
       isLoading: false,
+      isHydrated: false,
       error: null,
+
+      _setHydrated: () => set({ isHydrated: true }),
 
       register: async (values) => {
         set({ isLoading: true, error: null });
         try {
-          const payload = await apiPost<AuthPayload, RegisterFormValues>('/auth/register', values);
+          const payload = await post<AuthPayload, RegisterFormValues>('/auth/register', values);
           set({ user: payload.user, isLoading: false });
-        } catch (err: any) {
-          set({ error: err?.error?.message ?? 'Eroare la creare cont', isLoading: false });
+        } catch (err) {
+          const message = (err as { error?: { message?: string } })?.error?.message ?? 'Registration failed';
+          set({ error: message, isLoading: false });
           throw err;
         }
       },
@@ -36,10 +44,11 @@ export const useAuthStore = create<AuthState>()(
       login: async (values) => {
         set({ isLoading: true, error: null });
         try {
-          const payload = await apiPost<AuthPayload, LoginFormValues>('/auth/login', values);
+          const payload = await post<AuthPayload, LoginFormValues>('/auth/login', values);
           set({ user: payload.user, isLoading: false });
-        } catch (err: any) {
-          set({ error: err?.error?.message ?? 'Eroare la login', isLoading: false });
+        } catch (err) {
+          const message = (err as { error?: { message?: string } })?.error?.message ?? 'Login failed';
+          set({ error: message, isLoading: false });
           throw err;
         }
       },
@@ -47,9 +56,8 @@ export const useAuthStore = create<AuthState>()(
       logout: async () => {
         set({ isLoading: true });
         try {
-          await apiPost('/auth/logout');
+          await post('/auth/logout');
         } finally {
-          // stergem userul din state indiferent de raspunsul serverului
           set({ user: null, isLoading: false, error: null });
         }
       },
@@ -57,10 +65,9 @@ export const useAuthStore = create<AuthState>()(
       fetchMe: async () => {
         set({ isLoading: true, error: null });
         try {
-          const payload = await apiGet<AuthPayload>('/auth/me');
+          const payload = await get<AuthPayload>('/auth/me');
           set({ user: payload.user, isLoading: false });
         } catch {
-          // probabil a expirat cookie-ul, curatam silentios
           set({ user: null, isLoading: false });
         }
       },
@@ -71,8 +78,10 @@ export const useAuthStore = create<AuthState>()(
     {
       name: 'rpg-auth',
       storage: createJSONStorage(() => sessionStorage),
-      // salvam doar datele userului in session, nu si erorile de loading
       partialize: (state) => ({ user: state.user }),
+      onRehydrateStorage: () => (state) => {
+        state?._setHydrated();
+      },
     }
   )
 );

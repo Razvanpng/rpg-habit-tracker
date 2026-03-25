@@ -12,67 +12,79 @@ interface XpBarProps {
   compact?: boolean;
   glowing?: boolean;
   striped?: boolean;
+  height?: 'xs' | 'sm' | 'md' | 'lg';
 }
 
-export function XpBar({ 
-  user, 
-  previousUser, 
+export function XpBar({
+  user,
+  previousUser,
   compact = false,
   glowing = false,
-  striped = false
+  striped = false,
+  height,
 }: XpBarProps) {
   const current = getProgressSnapshot(user);
   const previous = previousUser ? getProgressSnapshot(previousUser) : current;
-  const didLevelUp = previousUser && user.level > previousUser.level;
 
+  const didLevelUp = !!previousUser && user.level > previousUser.level;
   const [showGain, setShowGain] = useState(false);
-  const gainAmount = previousUser ? user.currentXp - previousUser.currentXp + (didLevelUp ? previousUser.xpToNextLevel : 0) : 0;
 
-  const firstRender = useRef(true);
-  
+  const gainAmount = previousUser
+    ? user.currentXp - previousUser.currentXp + (didLevelUp ? previousUser.xpToNextLevel : 0)
+    : 0;
+
+  const isFirst = useRef(true);
+
   useEffect(() => {
-    if (firstRender.current) { 
-      firstRender.current = false; 
-      return; 
+    if (isFirst.current) {
+      isFirst.current = false;
+      return;
     }
     if (gainAmount > 0) {
       setShowGain(true);
-      const t = setTimeout(() => setShowGain(false), 2000);
+      const t = setTimeout(() => setShowGain(false), 2200);
       return () => clearTimeout(t);
     }
-  }, [user.currentXp, user.level, gainAmount]);
+  }, [gainAmount]);
+
+  const resolvedHeight = height ?? (compact ? 'xs' : 'sm');
 
   return (
-    <div className={`flex flex-col gap-1 ${compact ? '' : 'gap-2'}`}>
+    <div className={`flex flex-col gap-${compact ? '1' : '1.5'}`}>
       {!compact && (
         <div className="flex items-center justify-between">
-          <span className="text-xs font-medium text-ink-tertiary tracking-wide uppercase">Experience</span>
+          <span className="text-2xs font-display text-ink-tertiary tracking-widest uppercase">
+            Experience
+          </span>
           <div className="flex items-center gap-2">
             <AnimatePresence>
-              {showGain && (
+              {showGain && gainAmount > 0 && (
                 <motion.span
                   key="xp-gain"
                   initial={{ opacity: 0, y: 4, scale: 0.9 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: -6 }}
-                  className="text-xs font-semibold text-xp-bright"
+                  transition={{ type: 'spring', stiffness: 380, damping: 22 }}
+                  className="text-2xs font-mono font-semibold text-xp"
                 >
                   +{formatXp(gainAmount)}
                 </motion.span>
               )}
             </AnimatePresence>
-            <span className="text-xs text-ink-tertiary tabular-nums">
-              {formatXp(current.currentXp)} / {formatXp(current.xpToNextLevel)}
+            <span className="text-2xs font-mono text-ink-tertiary tabular">
+              {formatXp(current.currentXp)}&nbsp;/&nbsp;{formatXp(current.xpToNextLevel)}
             </span>
           </div>
         </div>
       )}
-      <ProgressBar 
-        value={didLevelUp ? current.progressPercent : current.progressPercent} 
-        previousValue={didLevelUp ? 0 : previous.progressPercent} 
-        height={compact ? 'sm' : 'md'} 
+
+      <ProgressBar
+        value={current.progressPercent}
+        previousValue={didLevelUp ? 0 : previous.progressPercent}
+        height={resolvedHeight}
         glowing={glowing}
         striped={striped}
+        color="xp"
       />
     </div>
   );
