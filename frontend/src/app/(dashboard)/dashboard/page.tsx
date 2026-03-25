@@ -16,11 +16,7 @@ import { CharacterCustomizer } from '@/components/character/CharacterCustomizer'
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Modal } from '@/components/ui/Modal';
-import {
-  getLevelTitle,
-  formatXp,
-  xpRequiredForLevel,
-} from '@/lib/xp';
+import { getLevelTitle, formatXp, xpRequiredForLevel } from '@/lib/xp';
 import type { HabitFormValues } from '@/types';
 
 function StatsStrip() {
@@ -50,9 +46,9 @@ function StatsStrip() {
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: i * 0.07 }}
-          className="glass rounded-xl p-3.5 flex flex-col gap-0.5"
+          className="bg-surface-raised border border-surface-border rounded-sm p-3.5 flex flex-col gap-0.5 shadow-card"
         >
-          <p className="text-2xs text-ink-tertiary uppercase tracking-wide font-medium">
+          <p className="text-2xs text-ink-tertiary uppercase tracking-widest font-display font-medium">
             {label}
           </p>
           <p className="text-base font-bold text-ink-primary tabular-nums font-mono leading-tight">
@@ -70,13 +66,13 @@ function ProgressCard() {
   if (!user) return null;
 
   return (
-    <Card glass neonBorder padded={false} className="p-5">
+    <Card padded={false} className="p-5">
       <div className="flex items-end justify-between mb-3">
         <div>
-          <p className="text-2xs text-ink-tertiary uppercase tracking-widest font-medium mb-0.5">
+          <p className="text-2xs text-ink-tertiary uppercase tracking-widest font-display font-medium mb-0.5">
             Experience
           </p>
-          <h2 className="text-lg font-bold text-gradient-xp leading-none">
+          <h2 className="text-lg font-bold text-gradient-xp leading-none font-display uppercase tracking-wider">
             {getLevelTitle(user.level)}
           </h2>
         </div>
@@ -89,7 +85,7 @@ function ProgressCard() {
           </p>
         </div>
       </div>
-      <XpBar user={user} glowing striped />
+      <XpBar user={user} glowing />
     </Card>
   );
 }
@@ -104,12 +100,12 @@ function CharacterPanel() {
       transition={{ duration: 0.45, ease: [0.4, 0, 0.2, 1] }}
       className="flex flex-col gap-4"
     >
-      <Card glass padded className="flex flex-col items-center py-8 px-6">
+      <Card padded className="flex flex-col items-center py-8 px-6">
         <CharacterHero />
 
         <div className="w-full mt-6">
           <Button
-            variant="glass"
+            variant="secondary"
             size="sm"
             fullWidth
             onClick={() => setCustomizerOpen((o) => !o)}
@@ -144,7 +140,7 @@ function CharacterPanel() {
         </div>
       </Card>
 
-      <Card glass padded>
+      <Card padded>
         <CharacterStats />
       </Card>
     </motion.div>
@@ -170,7 +166,7 @@ function HabitsPanel({ onCreateClick }: HabitsPanelProps) {
     >
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-base font-semibold text-ink-primary tracking-tight">
+          <h2 className="text-base font-semibold text-ink-primary tracking-widest font-display uppercase">
             Daily Habits
           </h2>
           <p className="text-xs text-ink-tertiary mt-0.5">
@@ -186,7 +182,6 @@ function HabitsPanel({ onCreateClick }: HabitsPanelProps) {
         </div>
         <Button
           size="sm"
-          glow
           onClick={onCreateClick}
           leftIcon={<span className="text-base leading-none font-light">+</span>}
         >
@@ -232,30 +227,19 @@ export default function DashboardPage() {
   return (
     <>
       <PlayerHUD />
-
       <LevelUpOverlay />
 
-      <div
-        aria-hidden
-        className="pointer-events-none fixed inset-0 overflow-hidden -z-10"
-      >
-        <div className="absolute top-[-20%] left-[30%] w-[500px] h-[500px] rounded-full bg-xp/5 blur-[120px]" />
-        <div className="absolute bottom-[-10%] right-[20%] w-[400px] h-[400px] rounded-full bg-xp-glow/5 blur-[100px]" />
+      <div aria-hidden className="pointer-events-none fixed inset-0 overflow-hidden -z-10">
+        <div className="absolute top-[-20%] left-[30%] w-[500px] h-[500px] rounded-full bg-surface-deep blur-[120px]" />
       </div>
 
-      <main className="max-w-6xl mx-auto px-4 sm:px-6 py-8 bg-grid">
+      <main className="max-w-6xl mx-auto px-4 sm:px-6 py-8">
         <div className="flex flex-col gap-6">
-
-          <motion.div
-            initial={{ opacity: 0, y: -8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.35 }}
-          >
+          <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }}>
             <ProgressCard />
           </motion.div>
 
           <div className="grid grid-cols-1 lg:grid-cols-[300px_1fr] gap-6 items-start">
-
             <div className="lg:sticky lg:top-24">
               <CharacterPanel />
             </div>

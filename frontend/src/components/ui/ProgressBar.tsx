@@ -15,45 +15,23 @@ interface ProgressBarProps {
   color?: 'xp' | 'success' | 'danger' | 'warning';
 }
 
-const heightMap = {
-  xs: 'h-0.5',
-  sm: 'h-1',
-  md: 'h-2',
-  lg: 'h-3',
+const heightMap: Record<string, string> = {
+  xs: 'h-px', sm: 'h-1', md: 'h-1.5', lg: 'h-2.5',
 };
 
-const colorMap = {
-  xp: 'from-xp-glow via-xp to-xp-bright',
-  success: 'from-green-600 to-green-400',
-  danger: 'from-red-700 to-red-500',
-  warning: 'from-amber-600 to-amber-400',
+const colorMap: Record<string, { fill: string; track: string }> = {
+  xp: { fill: '#d4af37', track: '#1a1508' },
+  success: { fill: '#3d7a35', track: '#0a1408' },
+  danger: { fill: '#8a1c1c', track: '#1a0808' },
+  warning: { fill: '#a06820', track: '#181008' },
 };
 
-const glowMap = {
-  xp: '0 0 16px rgba(124, 58, 237, 0.7), 0 0 4px rgba(167, 139, 250, 0.4)',
-  success: '0 0 12px rgba(34, 197, 94, 0.5)',
-  danger: '0 0 12px rgba(239, 68, 68, 0.5)',
-  warning: '0 0 12px rgba(245, 158, 11, 0.5)',
-};
-
-export function ProgressBar({
-  value,
-  previousValue,
-  height = 'md',
-  showLabel = false,
-  label,
-  glowing = false,
-  striped = false,
-  className = '',
-  color = 'xp',
-}: ProgressBarProps) {
+export function ProgressBar({ value, previousValue, height = 'md', showLabel = false, label, glowing = false, className = '', color = 'xp' }: ProgressBarProps) {
   const clamped = Math.min(Math.max(value, 0), 100);
-  const startVal = previousValue !== undefined
-    ? Math.min(Math.max(previousValue, 0), 100)
-    : clamped;
+  const startVal = Math.min(Math.max(previousValue ?? clamped, 0), 100);
 
   const raw = useMotionValue(startVal);
-  const spring = useSpring(raw, { stiffness: 55, damping: 16, mass: 0.9 });
+  const spring = useSpring(raw, { stiffness: 48, damping: 18, mass: 1.0 });
 
   const isFirst = useRef(true);
   useEffect(() => {
@@ -61,54 +39,30 @@ export function ProgressBar({
     raw.set(clamped);
   }, [clamped, raw]);
 
-  const widthPct = `${clamped}%`;
+  const { fill, track } = colorMap[color] ?? colorMap['xp'];
 
   return (
     <div className={`flex flex-col gap-1.5 ${className}`}>
-      {(showLabel || label) && (
+      {(label !== undefined || showLabel) && (
         <div className="flex items-center justify-between">
-          {label && (
-            <span className="text-2xs font-medium text-ink-tertiary uppercase tracking-wide">
-              {label}
-            </span>
-          )}
-          {showLabel && (
-            <span className="text-2xs font-semibold text-xp-bright tabular-nums font-mono">
-              {clamped}%
-            </span>
-          )}
+          {label && <span className="text-2xs font-display tracking-widest uppercase text-ink-tertiary">{label}</span>}
+          {showLabel && <span className="text-2xs font-mono text-ink-tertiary tabular">{clamped}%</span>}
         </div>
       )}
-
-      <div
-        className={[
-          'relative w-full overflow-hidden rounded-full',
-          'bg-surface-border/60',
-          heightMap[height],
-        ].join(' ')}
-      >
+      <div className={['relative w-full overflow-hidden', heightMap[height]].join(' ')} style={{ backgroundColor: track }}>
         <motion.div
-          className={[
-            'absolute inset-y-0 left-0 rounded-full',
-            `bg-gradient-to-r ${colorMap[color]}`,
-          ].join(' ')}
+          className="absolute inset-y-0 left-0"
           style={{
+            backgroundColor: fill,
             width: spring,
-            boxShadow: glowing ? glowMap[color] : 'none',
+            boxShadow: glowing ? `2px 0 8px ${fill}55, 0 0 2px ${fill}88` : 'none',
           }}
         />
-
-        {clamped > 0 && striped && (
-          <div
-            className="absolute inset-0 rounded-full animate-shimmer"
-            style={{
-              background:
-                'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.12) 50%, transparent 100%)',
-              backgroundSize: '200% 100%',
-              width: widthPct,
-            }}
-          />
-        )}
+        <div className="absolute inset-0 flex pointer-events-none" aria-hidden>
+          {[25, 50, 75].map((pct) => (
+            <div key={pct} className="absolute top-0 bottom-0 w-px" style={{ left: `${pct}%`, backgroundColor: 'rgba(0,0,0,0.4)' }} />
+          ))}
+        </div>
       </div>
     </div>
   );
