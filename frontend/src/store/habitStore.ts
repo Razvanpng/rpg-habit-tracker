@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import type { Habit, HabitFormValues, CompleteHabitResult, LevelUpEvent } from '@/types';
 import { get as apiGet, post as apiPost, patch as apiPatch, del as apiDelete } from '@/lib/api';
+import { useAuthStore } from './authStore';
 
 interface HabitState {
   habits: Habit[];
@@ -16,7 +17,6 @@ interface HabitState {
   clearError: () => void;
 }
 
-// am redenumit get in getStore ca sa nu faca conflict cu apiGet
 export const useHabitStore = create<HabitState>()((set, getStore) => ({
   habits: [],
   isLoading: false,
@@ -61,20 +61,17 @@ export const useHabitStore = create<HabitState>()((set, getStore) => ({
   deleteHabit: async (id) => {
     const previous = getStore().habits;
     
-    // optimistic update - dispare instant din UI
     set((state) => ({ habits: state.habits.filter((h) => h.id !== id) }));
     
     try {
       await apiDelete(`/habits/${id}`);
     } catch (err: any) {
-      // dam revert daca a crapat request-ul
       set({ habits: previous, error: err?.error?.message ?? 'Nu s-a putut sterge' });
       throw err;
     }
   },
 
   completeHabit: async (id) => {
-    // optimistic update pt bifare
     set((state) => ({
       habits: state.habits.map((h) => (h.id === id ? { ...h, isCompletedToday: true } : h)),
     }));
@@ -82,19 +79,18 @@ export const useHabitStore = create<HabitState>()((set, getStore) => ({
     try {
       const result = await apiPost<CompleteHabitResult>(`/habits/${id}/complete`);
       
-      // sincronizam cu serverul
       set((state) => ({
         habits: state.habits.map((h) => (h.id === id ? result.habit : h)),
       }));
 
-      // declansam eventul de level up pt animatii
+      useAuthStore.getState().updateUser(result.user);
+
       if (result.leveledUp) {
         set({ levelUpEvent: { previousLevel: result.user.level - 1, newLevel: result.user.level } });
       }
       return result;
       
     } catch (err) {
-      // rollback in caz de fail
       set((state) => ({
         habits: state.habits.map((h) => (h.id === id ? { ...h, isCompletedToday: false } : h)),
       }));

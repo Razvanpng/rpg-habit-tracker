@@ -1,6 +1,5 @@
 'use client';
 
-import { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCharacterStore } from '@/store/characterStore';
 import { useAuthStore } from '@/store/authStore';
@@ -43,7 +42,7 @@ const STAT_META: StatMeta[] = [
   },
 ];
 
-const STAT_MAX = 48;
+const STAT_MAX = 48; 
 
 const CLASS_LORE: Record<BodyType, string> = {
   warrior: 'Primary Stat: Strength. The Warrior thrives on physical discipline, heavy lifting, and enduring difficult tasks.',
@@ -70,7 +69,7 @@ function StatRow({ meta, value, isPrimary, index }: StatRowProps) {
     >
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
-          <img src={meta.icon} alt={meta.label} width={14} height={14} draggable={false} className="flex-shrink-0" style={{ filter: meta.iconFilter, width: 14, height: 14 }} />
+          <img src={meta.icon} alt={meta.label} width={14} height={14} draggable={false} className="flex-shrink-0" style={{ filter: meta.iconFilter }} />
           <span className={['text-2xs font-display tracking-widest uppercase', isPrimary ? 'text-xp' : 'text-ink-tertiary'].join(' ')}>{meta.label}</span>
           {isPrimary && <span className="text-2xs font-mono text-xp/50 border border-xp/15 px-1">★</span>}
         </div>
@@ -84,13 +83,7 @@ function StatRow({ meta, value, isPrimary, index }: StatRowProps) {
 }
 
 function ClassPicker() {
-  const { appearance, setBodyType, syncStatsWithLevel } = useCharacterStore();
-  const { user } = useAuthStore();
-
-  const handleChange = (bt: BodyType) => {
-    setBodyType(bt);
-    syncStatsWithLevel(user?.level ?? 1);
-  };
+  const { appearance, setBodyType } = useCharacterStore();
 
   return (
     <div className="flex flex-col gap-3 mt-1">
@@ -103,7 +96,7 @@ function ClassPicker() {
             <motion.button
               key={bt}
               whileTap={{ scale: 0.96 }}
-              onClick={() => handleChange(bt)}
+              onClick={() => setBodyType(bt)}
               className={['flex-1 py-1.5 text-2xs font-display tracking-widest uppercase border transition-colors duration-150', isActive ? bt === 'warrior' ? 'bg-surface-overlay border-class-warrior/40 text-class-warrior' : bt === 'rogue' ? 'bg-surface-overlay border-class-rogue/40 text-class-rogue' : 'bg-surface-overlay border-xp/30 text-xp' : 'bg-surface-hover border-surface-border text-ink-tertiary hover:text-ink-secondary hover:border-surface-bright'].join(' ')}
             >
               {label}
@@ -112,7 +105,6 @@ function ClassPicker() {
         })}
       </div>
       
-      {/* Lore Info Block */}
       <AnimatePresence mode="wait">
         <motion.div
           key={appearance.bodyType}
@@ -132,14 +124,13 @@ function ClassPicker() {
 }
 
 export function CharacterStats() {
-  const { stats, appearance, syncStatsWithLevel } = useCharacterStore();
+  const { appearance } = useCharacterStore();
   const { user } = useAuthStore();
-  const level = user?.level ?? 1;
-  const primaryStat = CLASS_DEFINITIONS[appearance.bodyType].primaryStat;
+  
+  if (!user) return null;
 
-  useEffect(() => {
-    syncStatsWithLevel(level);
-  }, [level, syncStatsWithLevel]);
+  const level = user.level;
+  const primaryStat = CLASS_DEFINITIONS[appearance.bodyType].primaryStat;
 
   return (
     <div className="flex flex-col gap-0">
@@ -149,7 +140,13 @@ export function CharacterStats() {
       </div>
       <div className="flex flex-col gap-px">
         {STAT_META.map((meta, i) => (
-          <StatRow key={meta.key} meta={meta} value={stats[meta.key]} isPrimary={primaryStat === meta.key} index={i} />
+          <StatRow 
+            key={meta.key} 
+            meta={meta} 
+            value={user[meta.key as keyof typeof user] as number} 
+            isPrimary={primaryStat === meta.key} 
+            index={i} 
+          />
         ))}
       </div>
       <div className="mt-5">
