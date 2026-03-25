@@ -15,9 +15,9 @@ model User {
   currentXp       Int      @default(0)
   
   // STATISTICI REALE (inlocuiesc calculul automat)
-  strength        Int      @default(10)
-  agility         Int      @default(10)
-  intellect       Int      @default(10)
+  strength        Int      @default(0)
+  agility         Int      @default(0)
+  intellect       Int      @default(0)
 
   lastActiveDate  DateTime @default(now()) @db.Date
 

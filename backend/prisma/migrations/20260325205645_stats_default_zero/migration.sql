@@ -1,0 +1,4 @@
+-- AlterTable
+ALTER TABLE "users" ALTER COLUMN "agility" SET DEFAULT 0,
+ALTER COLUMN "intellect" SET DEFAULT 0,
+ALTER COLUMN "strength" SET DEFAULT 0;
