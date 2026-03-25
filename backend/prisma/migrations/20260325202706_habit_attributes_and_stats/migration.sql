@@ -1,0 +1,8 @@
+-- AlterTable
+ALTER TABLE "habits" ADD COLUMN     "attribute" TEXT NOT NULL DEFAULT 'strength',
+ALTER COLUMN "xpReward" SET DEFAULT 10;
+
+-- AlterTable
+ALTER TABLE "users" ADD COLUMN     "agility" INTEGER NOT NULL DEFAULT 10,
+ADD COLUMN     "intellect" INTEGER NOT NULL DEFAULT 10,
+ADD COLUMN     "strength" INTEGER NOT NULL DEFAULT 10;
