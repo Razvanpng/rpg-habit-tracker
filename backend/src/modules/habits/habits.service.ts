@@ -11,6 +11,7 @@ function toHabitDto(habit: any): HabitDto {
     name: habit.name, 
     description: habit.description, 
     xpReward: habit.xpReward, 
+    attribute: habit.attribute, // Adaugat aici
     isCompletedToday: habit.isCompletedToday, 
     createdAt: habit.createdAt, 
     updatedAt: habit.updatedAt 
@@ -21,7 +22,6 @@ function toUtcDateString(date: Date): string {
   return date.toISOString().split('T')[0];
 }
 
-// Lazy reset pt habit-uri (mai ieftin decat un cron job)
 async function runDailyResetIfNeeded(userId: string): Promise<boolean> {
   const user = await prisma.user.findUniqueOrThrow({ where: { id: userId } });
   
@@ -30,7 +30,6 @@ async function runDailyResetIfNeeded(userId: string): Promise<boolean> {
 
   if (lastActive === today) return false;
 
-  // resetam tot in tranzactie ca sa fim safe
   await prisma.$transaction([
     prisma.habit.updateMany({ where: { userId }, data: { isCompletedToday: false } }),
     prisma.user.update({ where: { id: userId }, data: { lastActiveDate: new Date() } }),
@@ -53,11 +52,16 @@ export async function getHabitById(habitId: string, userId: string): Promise<Hab
 
 export async function createHabit(userId: string, input: CreateHabitInput): Promise<HabitDto> {
   const count = await prisma.habit.count({ where: { userId } });
-  // TODO: de marit limita asta daca ne cer userii
   if (count >= 50) throw BadRequestError('You cannot have more than 50 habits');
 
   const habit = await prisma.habit.create({
-    data: { userId, name: input.name, description: input.description ?? null, xpReward: input.xpReward },
+    data: { 
+      userId, 
+      name: input.name, 
+      description: input.description ?? null, 
+      xpReward: input.xpReward,
+      attribute: input.attribute // Adaugat aici
+    },
   });
   return toHabitDto(habit);
 }
@@ -72,6 +76,7 @@ export async function updateHabit(habitId: string, userId: string, input: Update
       ...(input.name !== undefined && { name: input.name }),
       ...(input.description !== undefined && { description: input.description }),
       ...(input.xpReward !== undefined && { xpReward: input.xpReward }),
+      ...(input.attribute !== undefined && { attribute: input.attribute }), // Adaugat aici
     },
   });
   return toHabitDto(updated);
@@ -94,17 +99,22 @@ export async function completeHabit(habitId: string, userId: string): Promise<Co
       throw BadRequestError('This habit has already been completed today');
     }
 
+    // 1. Definim ce atribut crestem bazat pe cum a fost configurat habit-ul
+    const statIncrement = { [habit.attribute]: { increment: 1 } };
+
+    // 2. Marcam ca facut
     const updatedHabit = await tx.habit.update({
       where: { id: habitId },
       data: { isCompletedToday: true },
     });
 
-    // log-ul e imuabil, pastram valoarea de xp din momentul completarii
+    // 3. Log
     await tx.habitLog.create({
       data: { habitId, userId, xpAwarded: habit.xpReward },
     });
 
-    const { leveledUp, updatedUser } = await awardXp(userId, habit.xpReward, tx);
+    // 4. Acordam XP si trimitem obiectul de +1 stat catre functia de progres
+    const { leveledUp, updatedUser } = await awardXp(userId, habit.xpReward, tx, statIncrement);
 
     return {
       habit: toHabitDto(updatedHabit),
@@ -122,7 +132,7 @@ export async function getHabitLogs(habitId: string, userId: string): Promise<{ c
   return await prisma.habitLog.findMany({
     where: { habitId, userId },
     orderBy: { completedAt: 'desc' },
-    take: 30, // luam doar ultimele 30 de zile pt chart-uri
+    take: 30,
     select: { completedAt: true, xpAwarded: true },
   });
 }

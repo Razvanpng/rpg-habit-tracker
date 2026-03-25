@@ -1,4 +1,4 @@
-//Generic API envelope 
+// Generic API envelope 
 
 export interface ApiSuccess<T> {
   success: true;
@@ -17,7 +17,7 @@ export interface ApiError {
 
 export type ApiResponse<T> = ApiSuccess<T> | ApiError;
 
-//User
+// User
 
 export interface SafeUser {
   id: string;
@@ -25,6 +25,9 @@ export interface SafeUser {
   level: number;
   currentXp: number;
   xpToNextLevel: number;
+  strength: number;
+  agility: number;
+  intellect: number;
   createdAt: Date;
 }
 
@@ -35,7 +38,7 @@ export interface AuthPayload {
   authenticated: boolean;
 }
 
-//Habit
+// Habit
 
 export interface HabitDto {
   id: string;
@@ -43,6 +46,7 @@ export interface HabitDto {
   name: string;
   description: string | null;
   xpReward: number;
+  attribute: string; 
   isCompletedToday: boolean;
   createdAt: Date;
   updatedAt: Date;
@@ -55,7 +59,7 @@ export interface CompleteHabitResult {
   user: SafeUser;
 }
 
-//Progress
+// Progress
 
 export interface ProgressSnapshot {
   level: number;
