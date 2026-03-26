@@ -1,5 +1,6 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import type { CookieOptions } from 'express';
 import { prisma } from '../../config/database';
 import { env } from '../../config/env';
 import {
@@ -73,17 +74,17 @@ export async function getCurrentUser(userId: string): Promise<AuthPayload> {
   return { user: formatSafeUser(user), authenticated: true };
 }
 
-export const cookieConfig = {
+export const cookieConfig: CookieOptions = {
   httpOnly: true,
   secure: env.NODE_ENV === 'production',
-  sameSite: env.NODE_ENV === 'production' ? 'none' : ('lax' as const),
+  sameSite: env.NODE_ENV === 'production' ? 'none' : 'lax',
   maxAge: 7 * 24 * 60 * 60 * 1000,
   path: '/',
 };
 
-export const clearCookieConfig = {
+export const clearCookieConfig: CookieOptions = {
   httpOnly: true,
   secure: env.NODE_ENV === 'production',
-  sameSite: env.NODE_ENV === 'production' ? 'none' : ('lax' as const),
+  sameSite: env.NODE_ENV === 'production' ? 'none' : 'lax',
   path: '/',
 };
