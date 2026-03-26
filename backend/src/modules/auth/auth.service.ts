@@ -76,7 +76,7 @@ export async function getCurrentUser(userId: string): Promise<AuthPayload> {
 export const cookieConfig = {
   httpOnly: true,
   secure: env.NODE_ENV === 'production',
-  sameSite: 'lax' as const,
+  sameSite: env.NODE_ENV === 'production' ? 'none' : ('lax' as const),
   maxAge: 7 * 24 * 60 * 60 * 1000,
   path: '/',
 };
@@ -84,6 +84,6 @@ export const cookieConfig = {
 export const clearCookieConfig = {
   httpOnly: true,
   secure: env.NODE_ENV === 'production',
-  sameSite: 'lax' as const,
+  sameSite: env.NODE_ENV === 'production' ? 'none' : ('lax' as const),
   path: '/',
 };
