@@ -2,7 +2,7 @@ import axios, { type AxiosInstance, type AxiosResponse, type AxiosError } from '
 import type { ApiSuccess, ApiErrorBody } from '@/types';
 
 const apiClient: AxiosInstance = axios.create({
-  baseURL: '/api',
+  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api',
   withCredentials: true, 
   timeout: 10_000,
   headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
