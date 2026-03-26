@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useHabitStore } from '@/store/habitStore';
 import { useAuthStore } from '@/store/authStore';
-import { useCharacterStore } from '@/store/characterStore';
 import { PlayerHUD } from '@/components/player/PlayerHUD';
 import { LevelUpOverlay } from '@/components/player/LevelUpOverlay';
 import { XpBar } from '@/components/player/XpBar';
@@ -176,8 +175,6 @@ function HabitsPanel({ onCreateClick }: HabitsPanelProps) {
 
 export default function DashboardPage() {
   const { fetchHabits, createHabit } = useHabitStore();
-  const { user } = useAuthStore();
-
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
 

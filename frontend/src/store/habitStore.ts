@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import { create } from 'zustand';
 import type { Habit, HabitFormValues, CompleteHabitResult, LevelUpEvent } from '@/types';
 import { get as apiGet, post as apiPost, patch as apiPatch, del as apiDelete } from '@/lib/api';
