@@ -14,7 +14,6 @@ model User {
   level           Int      @default(1)
   currentXp       Int      @default(0)
   
-  // STATISTICI REALE (inlocuiesc calculul automat)
   strength        Int      @default(0)
   agility         Int      @default(0)
   intellect       Int      @default(0)
@@ -37,7 +36,6 @@ model Habit {
   description      String?
   xpReward         Int      @default(10)
   
-  // LEGAM HABIT-UL DE O CLASA/ATRIBUT ("strength", "agility" sau "intellect")
   attribute        String   @default("strength") 
   
   isCompletedToday Boolean  @default(false)
