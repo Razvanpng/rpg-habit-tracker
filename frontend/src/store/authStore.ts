@@ -77,7 +77,7 @@ export const useAuthStore = create<AuthState>()(
     }),
     {
       name: 'rpg-auth',
-      storage: createJSONStorage(() => sessionStorage),
+      storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({ user: state.user }),
       onRehydrateStorage: () => (state) => {
         state?._setHydrated();
