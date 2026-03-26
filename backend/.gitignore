@@ -1,5 +1,24 @@
-node_modules
-# Keep environment variables out of version control
+# Environment Variables
 .env
+.env.local
 
-/generated/prisma
+# Build output
+dist/
+
+# Dependencies
+node_modules/
+
+# Logs & Debug
+logs
+*.log
+npm-debug.log*
+cookies.txt
+jar.txt
+
+# Prisma (în caz că folosești sqlite pe viitor)
+*.db
+*.db-journal
+
+# OS files
+.DS_Store
+Thumbs.db

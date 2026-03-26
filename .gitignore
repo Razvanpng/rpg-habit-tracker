@@ -1,22 +1,9 @@
-.env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
+.DS_Store
+Thumbs.db
+.vscode/
 
 node_modules/
 
-.next/
-out/
-build/
-
-dist/
-
-*.db
-*.db-journal
-
-cookies.txt
-jar.txt
-
-.DS_Store
-Thumbs.db
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
