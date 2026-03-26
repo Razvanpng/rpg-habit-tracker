@@ -177,7 +177,6 @@ function HabitsPanel({ onCreateClick }: HabitsPanelProps) {
 export default function DashboardPage() {
   const { fetchHabits, createHabit } = useHabitStore();
   const { user } = useAuthStore();
-  const { syncStatsWithLevel } = useCharacterStore();
 
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
@@ -185,12 +184,6 @@ export default function DashboardPage() {
   useEffect(() => {
     void fetchHabits();
   }, [fetchHabits]);
-
-  useEffect(() => {
-    if (user?.level) {
-      syncStatsWithLevel(user.level);
-    }
-  }, [user?.level, syncStatsWithLevel]);
 
   const handleCreate = async (values: HabitFormValues) => {
     setIsCreating(true);
