@@ -3,10 +3,7 @@ import jwt from 'jsonwebtoken';
 import type { CookieOptions } from 'express';
 import { prisma } from '../../config/database';
 import { env } from '../../config/env';
-import {
-  ConflictError,
-  UnauthorizedError,
-} from '../../middleware/errorHandler';
+import { ConflictError, UnauthorizedError } from '../../middleware/errorHandler';
 import { formatSafeUser } from '../progress/progress.service';
 import type { RegisterInput, LoginInput } from './auth.schema';
 import type { AuthPayload } from '../../types/api.types';
@@ -14,77 +11,43 @@ import type { AuthPayload } from '../../types/api.types';
 const BCRYPT_ROUNDS = 12;
 
 function signToken(userId: string, email: string): string {
-  return jwt.sign(
-    { sub: userId, email },
-    env.JWT_SECRET,
-    { expiresIn: env.JWT_EXPIRES_IN } as jwt.SignOptions
-  );
+  return jwt.sign({ sub: userId, email }, env.JWT_SECRET, { expiresIn: env.JWT_EXPIRES_IN } as jwt.SignOptions);
 }
 
 export async function registerUser(input: RegisterInput): Promise<AuthPayload> {
-  const existing = await prisma.user.findUnique({
-    where: { email: input.email },
-  });
-
-  if (existing) {
-    throw ConflictError('An account with that email address already exists');
-  }
-
+  const existing = await prisma.user.findUnique({ where: { email: input.email } });
+  if (existing) throw ConflictError('An account with that email address already exists');
   const passwordHash = await bcrypt.hash(input.password, BCRYPT_ROUNDS);
-
-  const user = await prisma.user.create({
-    data: {
-      email: input.email,
-      passwordHash,
-      level: 1,
-      currentXp: 0,
-    },
-  });
-
+  const user = await prisma.user.create({ data: { email: input.email, passwordHash, level: 1, currentXp: 0 } });
   return { user: formatSafeUser(user), authenticated: true };
 }
 
 export async function loginUser(input: LoginInput): Promise<AuthPayload> {
-  const user = await prisma.user.findUnique({
-    where: { email: input.email },
-  });
-
+  const user = await prisma.user.findUnique({ where: { email: input.email } });
   const DUMMY_HASH = '$2a$12$WApLPCTbOKGHJx2JgfMQE.MvFp3lkRXEFVIqXFqfL7KWQR5o4B3p6';
-
-  const passwordMatch = await bcrypt.compare(
-    input.password,
-    user?.passwordHash ?? DUMMY_HASH
-  );
-
-  if (!user || !passwordMatch) {
-    throw UnauthorizedError('Invalid email or password');
-  }
-
+  const passwordMatch = await bcrypt.compare(input.password, user?.passwordHash ?? DUMMY_HASH);
+  if (!user || !passwordMatch) throw UnauthorizedError('Invalid email or password');
   return { user: formatSafeUser(user), authenticated: true };
 }
 
-export function createTokenForUser(userId: string, email: string): string {
-  return signToken(userId, email);
-}
+export function createTokenForUser(userId: string, email: string): string { return signToken(userId, email); }
 
 export async function getCurrentUser(userId: string): Promise<AuthPayload> {
-  const user = await prisma.user.findUniqueOrThrow({
-    where: { id: userId },
-  });
+  const user = await prisma.user.findUniqueOrThrow({ where: { id: userId } });
   return { user: formatSafeUser(user), authenticated: true };
 }
 
 export const cookieConfig: CookieOptions = {
   httpOnly: true,
-  secure: env.NODE_ENV === 'production',
-  sameSite: env.NODE_ENV === 'production' ? 'none' : 'lax',
+  secure: true, 
+  sameSite: 'none', 
   maxAge: 7 * 24 * 60 * 60 * 1000,
   path: '/',
 };
 
 export const clearCookieConfig: CookieOptions = {
   httpOnly: true,
-  secure: env.NODE_ENV === 'production',
-  sameSite: env.NODE_ENV === 'production' ? 'none' : 'lax',
+  secure: true,
+  sameSite: 'none',
   path: '/',
 };

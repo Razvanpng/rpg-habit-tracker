@@ -9,7 +9,6 @@ interface AuthState {
   isLoading: boolean;
   isHydrated: boolean;
   error: string | null;
-
   register: (values: RegisterFormValues) => Promise<void>;
   login: (values: LoginFormValues) => Promise<void>;
   logout: () => Promise<void>;
@@ -21,12 +20,11 @@ interface AuthState {
 
 export const useAuthStore = create<AuthState>()(
   persist(
-    (set) => ({
+    (set, getStore) => ({
       user: null,
       isLoading: false,
       isHydrated: false,
       error: null,
-
       _setHydrated: () => set({ isHydrated: true }),
 
       register: async (values) => {
@@ -35,7 +33,7 @@ export const useAuthStore = create<AuthState>()(
           const payload = await post<AuthPayload, RegisterFormValues>('/auth/register', values);
           set({ user: payload.user, isLoading: false });
         } catch (err) {
-          const message = (err as { error?: { message?: string } })?.error?.message ?? 'Registration failed';
+          const message = (err as any)?.error?.message ?? 'Registration failed';
           set({ error: message, isLoading: false });
           throw err;
         }
@@ -47,7 +45,7 @@ export const useAuthStore = create<AuthState>()(
           const payload = await post<AuthPayload, LoginFormValues>('/auth/login', values);
           set({ user: payload.user, isLoading: false });
         } catch (err) {
-          const message = (err as { error?: { message?: string } })?.error?.message ?? 'Login failed';
+          const message = (err as any)?.error?.message ?? 'Login failed';
           set({ error: message, isLoading: false });
           throw err;
         }
@@ -59,16 +57,16 @@ export const useAuthStore = create<AuthState>()(
           await post('/auth/logout');
         } finally {
           set({ user: null, isLoading: false, error: null });
+          localStorage.removeItem('rpg-auth');
         }
       },
 
       fetchMe: async () => {
-        set({ isLoading: true, error: null });
         try {
           const payload = await get<AuthPayload>('/auth/me');
-          set({ user: payload.user, isLoading: false });
+          set({ user: payload.user });
         } catch {
-          set({ user: null, isLoading: false });
+          set({ user: null });
         }
       },
 
@@ -81,6 +79,7 @@ export const useAuthStore = create<AuthState>()(
       partialize: (state) => ({ user: state.user }),
       onRehydrateStorage: () => (state) => {
         state?._setHydrated();
+        state?.fetchMe();
       },
     }
   )
